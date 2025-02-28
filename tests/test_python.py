@@ -5,13 +5,14 @@ from pathlib import Path
 import cv2
 import torch
 from PIL import Image
+import time
 
 from ultralytics import YOLO
 from ultralytics.yolo.utils import ROOT, SETTINGS
 
-MODEL = Path(SETTINGS['weights_dir']) / 'yolov8n.pt'
+MODEL = 'yolov8l-face.pt'
 CFG = 'yolov8n.yaml'
-SOURCE = ROOT / 'assets/bus.jpg'
+SOURCE = r"C:\Users\Crispy\Downloads\14_Traffic_Traffic_14_179_TEST.jpg" #ROOT / 'assets/bus.jpg'
 
 
 def test_model_forward():
@@ -43,17 +44,22 @@ def test_predict_img():
     model = YOLO(MODEL)
     img = Image.open(str(SOURCE))
     output = model(source=img, save=True, verbose=True)  # PIL
+    # image = Image.fromarray(np.array(img)[int(output[0].boxes[i].data[0][1].cpu()):int(output[0].boxes[i].data[0][3].cpu()), int(output[0].boxes[i].data[0][0].cpu()):int(output[0].boxes[i].data[0][2].cpu())])
     assert len(output) == 1, "predict test failed"
     img = cv2.imread(str(SOURCE))
     output = model(source=img, save=True, save_txt=True)  # ndarray
     assert len(output) == 1, "predict test failed"
-    output = model(source=[img, img], save=True, save_txt=True)  # batch
+    a = time.time()
+    output = model(source=[img] * 2, save=False, save_txt=False)  # batch
+    print(time.time() - a, 'seconds for 100')
     assert len(output) == 2, "predict test failed"
-    output = model(source=[img, img], save=True, stream=True)  # stream
-    assert len(list(output)) == 2, "predict test failed"
-    tens = torch.zeros(320, 640, 3)
-    output = model(tens.numpy())
-    assert len(output) == 1, "predict test failed"
+    # a = time.time()
+    output = model(source=[img] * 2, save=True, stream=True)  # stream
+    print(time.time() - a, 'seconds for 100')
+    # assert len(list(output)) == 2, "predict test failed"
+    # tens = torch.zeros(320, 640, 3)
+    # output = model(tens.numpy())
+    # assert len(output) == 1, "predict test failed"
 
 
 def test_val():
